@@ -6,7 +6,7 @@ source.dir = .
 source.include_exts = py,png,ttf,json,afm,pfb,txt
 source.exclude_dirs = tests,bin,.github,.buildozer
 version = 0.1.0
-requirements = python3,kivy==2.3.0,pillow,charset-normalizer,pyjnius
+requirements = python3==3.11.5,hostpython3==3.11.5,kivy==2.3.0,pillow,charset-normalizer,pyjnius
 orientation = landscape
 fullscreen = 0
 
