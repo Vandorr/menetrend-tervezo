@@ -3,6 +3,8 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
+permissions:
+  contents: write
 jobs:
   build:
     runs-on: ubuntu-24.04
@@ -61,3 +63,11 @@ jobs:
         with:
           name: menetrend-apk
           path: bin/*.apk
+      - name: Kiadás a Releases oldalra (közvetlen APK-letöltés)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp bin/*.apk menetrend-tervezo.apk
+          gh release create "build-${{ github.run_number }}" menetrend-tervezo.apk \
+            --title "Menetrend tervező – build ${{ github.run_number }}" \
+            --notes "Debug APK Androidra. Telepítés: töltsd le a tabletre, nyisd meg, engedélyezd az ismeretlen forrásból telepítést."
