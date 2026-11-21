@@ -84,7 +84,12 @@ e._fn_add(); e._fn_add()
 e._del_block()
 e.refresh_all()
 d["door"]["enabled"] = True; d["legend"]["bike"] = True
-e.show_tab("table"); e.show_tab("pdf")
+e.show_tab("table"); e.show_tab("preview"); e.show_tab("pdf")
+assert e.pv_png and os.path.getsize(e.pv_png) > 5000, e.pv_status.text
+assert e.pv_status.text == "", e.pv_status.text
+e._pv_step(0.25); e._pv_fit_page(); e._pv_fit_width()
+e.show_tab("preview")                                  # második frissítés, régi PNG törlődik
+print("előnézet:", os.path.basename(e.pv_png), round(e.pv_ratio, 3))
 e.make_pdf()
 out = [f for f in os.listdir(os.path.join(os.environ["HOME"], "Downloads"))] if os.path.isdir(os.path.join(os.environ["HOME"], "Downloads")) else os.listdir(os.getcwd())
 print("kimenet:", [f for f in out if f.endswith(".pdf")])

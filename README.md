@@ -9,7 +9,8 @@ Python + Kivy; a PDF-et reportlab rajzolja (vektoros).
 3. **Menetrend** fül: legfeljebb 2 sor × 3 oszlop blokk (pl. hétköznap / péntek / szombat…); óránként a percek.
    „Gyors kitöltés” és „másolás másik blokkból” segít.
 4. **Jelzések** fül: kerékpár és akadálymentes piktogram, első ajtós felszállás sáv (be/ki), infóblokk (be/ki), lábjegyzetek.
-5. **PDF** fül: generálás → Android: Letöltések mappa; innen megnyitható és nyomtatható.
+5. **Előnézet** fül: az aktuális adatokból friss PDF-et rajzol és képként mutatja (nagyítható, görgethető; Androidon a beépített PdfRenderer-rel).
+6. **PDF** fül: generálás → Android: Letöltések mappa; innen megnyitható és nyomtatható.
 
 ## APK építése (nem kell hozzá saját Linux gép)
 1. Hozz létre egy GitHub-tárat, töltsd fel ennek a mappának a tartalmát (a `main` ágra).

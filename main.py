@@ -22,7 +22,7 @@ from kivy.uix.screenmanager import Screen, ScreenManager
 from kivy.uix.scrollview import ScrollView
 from kivy.utils import get_color_from_hex
 
-from menetrend import model, pdfgen, storage
+from menetrend import model, pdfgen, preview, storage
 from style import (ACCENT, MUTED, NAVY, ROW_H, TEXT, WHITE, Btn, Card, Drop, Inp, Swatch, Tog,
                    paint)
 
@@ -193,7 +193,7 @@ class ListScreen(Screen):
 # ---------------------------------------------------------------- szerkesztő
 class EditScreen(Screen):
     TABS = (("basic", "Járat"), ("stops", "Megállók"), ("table", "Menetrend"),
-            ("marks", "Jelzések"), ("pdf", "PDF"))
+            ("marks", "Jelzések"), ("preview", "Előnézet"), ("pdf", "PDF"))
 
     def __init__(self, app, **kw):
         super().__init__(name="edit", **kw)
@@ -201,6 +201,8 @@ class EditScreen(Screen):
         self.data = None
         self.sel = (0, 0)
         self.last_open = None
+        self.pv_n = 0               # előnézet-képek számlálója
+        self.pv_png = None          # az éppen megjelenített előnézet-kép
 
         root = BoxLayout(orientation="vertical", padding=dp(14), spacing=dp(10))
         head = Card(bg=NAVY, size_hint_y=None, height=dp(64), padding=[dp(10), dp(8)], spacing=dp(10))
@@ -230,6 +232,8 @@ class EditScreen(Screen):
         self.tab_buttons[key].state = "down"
         self.holder.clear_widgets()
         self.holder.add_widget(self.boxes[key])
+        if key == "preview" and self.data:
+            self.refresh_preview()
 
     # ---- életciklus
     def load(self, data):
@@ -246,7 +250,7 @@ class EditScreen(Screen):
     def refresh(self, key):
         builder = {"basic": self.build_basic, "stops": self.build_stops,
                    "table": self.build_table, "marks": self.build_marks,
-                   "pdf": self.build_pdf}[key]
+                   "preview": self.build_preview, "pdf": self.build_pdf}[key]
         box = self.boxes[key]
         box.clear_widgets()
         box.add_widget(builder())
@@ -557,7 +561,79 @@ class EditScreen(Screen):
         del self.data["footnotes"][i]
         self.refresh("marks")
 
-    # ---- 5. fül: PDF
+    # ---- Előnézet fül
+    def build_preview(self):
+        self.pv_zoom = 1.0
+        self.pv_ratio = 1.414
+        self.pv_status = note("")
+        self.pv_img = Image(size_hint=(None, None), pos_hint={"center_x": 0.5, "top": 1},
+                            fit_mode="fill", nocache=True)
+        self.pv_inner = FloatLayout(size_hint=(None, None))
+        self.pv_inner.add_widget(self.pv_img)
+        self.pv_scroll = ScrollView(do_scroll_x=True, do_scroll_y=True, bar_width=dp(6),
+                                    bar_color=(0.18, 0.43, 0.93, 0.7),
+                                    bar_inactive_color=(0.18, 0.43, 0.93, 0.25))
+        self.pv_scroll.add_widget(self.pv_inner)
+        self.pv_scroll.bind(size=lambda *_: self._pv_layout())
+        box = BoxLayout(orientation="vertical", spacing=dp(8), padding=dp(10))
+        box.add_widget(hrow(
+            button("Frissítés", self.refresh_preview, kind="accent", width=dp(140)),
+            button("Teljes oldal", self._pv_fit_page, width=dp(150)),
+            button("Szélességhez", self._pv_fit_width, width=dp(150)),
+            button("-", lambda: self._pv_step(-0.25), width=dp(70)),
+            button("+", lambda: self._pv_step(0.25), width=dp(70)),
+            BoxLayout()))
+        box.add_widget(self.pv_status)
+        box.add_widget(self.pv_scroll)
+        return box
+
+    def _pv_layout(self):
+        vw = max(self.pv_scroll.width, dp(200))
+        vh = max(self.pv_scroll.height, dp(200))
+        w = (vw - dp(4)) * self.pv_zoom
+        h = w * self.pv_ratio
+        self.pv_img.size = (w, h)
+        self.pv_inner.size = (max(w, vw), max(h, vh))
+
+    def _pv_step(self, delta):
+        self.pv_zoom = min(3.0, max(0.3, self.pv_zoom + delta))
+        self._pv_layout()
+
+    def _pv_fit_width(self):
+        self.pv_zoom = 1.0
+        self._pv_layout()
+
+    def _pv_fit_page(self):
+        vw = max(self.pv_scroll.width - dp(4), dp(200))
+        vh = max(self.pv_scroll.height - dp(4), dp(200))
+        self.pv_zoom = min(1.0, max(0.3, vh / (vw * self.pv_ratio)))
+        self._pv_layout()
+
+    def refresh_preview(self):
+        """Friss PDF az aktuális adatokból, majd képpé alakítva megjelenik."""
+        try:
+            self.save()
+            self.pv_n += 1
+            tmp_pdf = os.path.join(self.app.user_data_dir, "preview.pdf")
+            png = os.path.join(self.app.user_data_dir, "preview_%d.png" % self.pv_n)
+            pdfgen.render(self.data, tmp_pdf)
+            w, h = preview.render_png(tmp_pdf, png)
+            old, self.pv_png = self.pv_png, png
+            self.pv_ratio = h / float(w)
+            self.pv_img.source = png
+            self.pv_img.reload()
+            self.pv_status.text = ""
+            self._pv_layout()
+            if old:
+                try:
+                    os.remove(old)
+                except OSError:
+                    pass
+        except Exception as e:                          # az előnézet hibája ne vigye el az appot
+            traceback.print_exc()
+            self.pv_status.text = "Az előnézet nem készíthető: %s: %s" % (type(e).__name__, e)
+
+    # ---- PDF fül
     def build_pdf(self):
         g = vlist()
         g.add_widget(note("A PDF A4 álló lapra készül, vektoros (élesen nyomtatható). "
