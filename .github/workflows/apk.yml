@@ -6,7 +6,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-24.04
-    timeout-minutes: 90
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -23,15 +23,40 @@ jobs:
             zlib1g-dev libncurses-dev cmake libffi-dev libssl-dev libltdl-dev build-essential
       - name: Buildozer telepítése
         run: pip install --upgrade buildozer "Cython==0.29.37" virtualenv
-      - name: Gyorsítótár (SDK/NDK)
-        uses: actions/cache@v4
+      - name: Maven-tükör (a Maven Central 429-cel korlátozza a futtatókat)
+        run: |
+          mkdir -p ~/.gradle
+          cat > ~/.gradle/init.gradle <<'GRADLE'
+          allprojects {
+              buildscript { repositories { maven { url 'https://maven-central.storage-download.googleapis.com/maven2/' } } }
+              repositories { maven { url 'https://maven-central.storage-download.googleapis.com/maven2/' } }
+          }
+          GRADLE
+      - name: Gyorsítótár visszaállítása
+        uses: actions/cache/restore@v4
         with:
           path: |
             ~/.buildozer
             .buildozer
-          key: buildozer-${{ hashFiles('buildozer.spec') }}
-      - name: APK építése
-        run: buildozer -v android debug
+            ~/.gradle/caches
+          key: buildozer-${{ hashFiles('buildozer.spec') }}-${{ github.run_id }}
+          restore-keys: buildozer-${{ hashFiles('buildozer.spec') }}-
+      - name: APK építése (3 próbálkozásig)
+        run: |
+          for i in 1 2 3; do
+            buildozer -v android debug && exit 0
+            echo "Sikertelen próba: $i"; sleep 45
+          done
+          exit 1
+      - name: Gyorsítótár mentése
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ~/.buildozer
+            .buildozer
+            ~/.gradle/caches
+          key: buildozer-${{ hashFiles('buildozer.spec') }}-${{ github.run_id }}
       - uses: actions/upload-artifact@v4
         with:
           name: menetrend-apk
