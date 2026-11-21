@@ -5,9 +5,21 @@ import os, sys, tempfile, types
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 sys.path.insert(0, ROOT)
 
+class _Ctx:
+    def __enter__(self): return self
+    def __exit__(self, *a): return False
+    def __getattr__(self, name):
+        if name.startswith("__"): raise AttributeError(name)
+        return lambda *a, **k: None
+
+class Canvas(_Ctx):
+    before = _Ctx()
+
 class W:
     def __init__(self, *a, **kw):
         self.children = []
+        self.canvas = Canvas()
+        self.pos = (0, 0); self.size = (0, 0); self.x = self.y = self.width = self.height = 0
         self.__dict__.update(kw)
     def __getattr__(self, name):           # setter, bind, open, dismiss ... mind no-op
         if name.startswith("__"):
@@ -29,13 +41,16 @@ names = {
  "kivy.uix.gridlayout": ["GridLayout"], "kivy.uix.label": ["Label"], "kivy.uix.popup": ["Popup"],
  "kivy.uix.screenmanager": ["Screen", "ScreenManager"], "kivy.uix.scrollview": ["ScrollView"],
  "kivy.uix.spinner": ["Spinner"], "kivy.uix.tabbedpanel": ["TabbedPanel", "TabbedPanelHeader"],
- "kivy.uix.textinput": ["TextInput"], "kivy.uix.togglebutton": ["ToggleButton"]}
+ "kivy.uix.textinput": ["TextInput"], "kivy.uix.togglebutton": ["ToggleButton"],
+ "kivy.uix.floatlayout": ["FloatLayout"], "kivy.uix.image": ["Image"],
+ "kivy.graphics": ["Color", "Line", "RoundedRectangle"]}
 mod("kivy"); mod("kivy.uix")
 for m, cls in names.items():
     mod(m, **{c: type(c, (W,), {}) for c in cls})
 class Screen(W):
     def __init__(self, name="", **kw): super().__init__(**kw); self.name = name
 sys.modules["kivy.uix.screenmanager"].Screen = Screen
+sys.modules["kivy.uix.spinner"].SpinnerOption = type("SpinnerOption", (W,), {})
 mod("kivy.app", App=AppBase)
 mod("kivy.core"); mod("kivy.core.window", Window=W())
 mod("kivy.metrics", dp=lambda x: x, sp=lambda x: x)
@@ -69,6 +84,7 @@ e._fn_add(); e._fn_add()
 e._del_block()
 e.refresh_all()
 d["door"]["enabled"] = True; d["legend"]["bike"] = True
+e.show_tab("table"); e.show_tab("pdf")
 e.make_pdf()
 out = [f for f in os.listdir(os.path.join(os.environ["HOME"], "Downloads"))] if os.path.isdir(os.path.join(os.environ["HOME"], "Downloads")) else os.listdir(os.getcwd())
 print("kimenet:", [f for f in out if f.endswith(".pdf")])
