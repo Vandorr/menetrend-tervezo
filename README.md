@@ -3,6 +3,17 @@
 Tableten (Android) futó program saját, kitalált menetrendek szerkesztésére és A4-es PDF-be mentésére.
 Python + Kivy; a PDF-et reportlab rajzolja (vektoros).
 
+## Letöltés (kész APK)
+
+A lefordított Android-alkalmazás (`menetrend-tervezo.apk`) a tár **[Releases](../../releases/latest)** oldalán tölthető le, a legfrissebb kiadás **Assets** részéből. Nem kell hozzá semmit építeni.
+
+Telepítés Android-tabletre:
+1. Nyisd meg a Releases oldalt a tabletről, és töltsd le a `menetrend-tervezo.apk` fájlt.
+2. Nyisd meg a letöltött fájlt, és engedélyezd az ismeretlen forrásból telepítést, ha az Android rákérdez.
+3. Ez egy debug APK, ezért a Play Protect figyelmeztetést mutathat – a telepítés ettől még folytatható.
+
+Minden módosítás után a GitHub automatikusan új kiadást készít, a legnagyobb sorszámú a legfrissebb.
+
 ## Így néz ki a kimenet
 
 A program által készített PDF-ek (valódi kimenet, kitalált adatokkal). Kattintásra a PDF is letölthető:
@@ -20,7 +31,7 @@ A program által készített PDF-ek (valódi kimenet, kitalált adatokkal). Katt
 5. **Előnézet** fül: az aktuális adatokból friss PDF-et rajzol és képként mutatja (nagyítható, görgethető; Androidon a beépített PdfRenderer-rel).
 6. **PDF** fül: generálás → Android: Letöltések mappa; innen megnyitható és nyomtatható.
 
-## APK építése (nem kell hozzá saját Linux gép)
+## APK saját építése (ha módosítanád a kódot)
 1. Hozz létre egy GitHub-tárat, töltsd fel ennek a mappának a tartalmát (a `main` ágra).
 2. A GitHubon: **Actions → APK építése → Run workflow** (a push is elindítja).
 3. Kb. 15–30 perc után az **Artifacts → menetrend-apk** alatt letölthető az `.apk`.
