@@ -79,16 +79,32 @@ def render(data, out_path):
     fs = _fit(num, "MT-B", 36, 74, 14)
     c.setFont("MT-B", fs)
     c.drawCentredString(M + 106, top - hh / 2 - fs * 0.35, num)
-    c.setFillColor(black)
-    p = c.beginPath()
-    ax, ay = M + BAR_W + 18, top - 30
-    p.moveTo(ax, ay - 8); p.lineTo(ax, ay + 10); p.lineTo(ax + 14, ay + 1); p.close()
-    c.drawPath(p, fill=1, stroke=0)
+    # végállomás: 1 sor -> függőlegesen középen, nagyobb betűvel; 2 sor -> mint eddig
     tx = M + BAR_W + 42
-    for i, line in enumerate([s for s in d["destination"] if s.strip()]):
-        fs = _fit(line, "MT-B", 24, W - M - tx)
-        c.setFont("MT-B", fs)
-        c.drawString(tx, top - 28 - i * 26, line)
+    avail = W - M - tx
+    cy = top - hh / 2                       # a fejléc függőleges közepe
+    lines = [x.strip() for x in d["destination"] if x.strip()]
+    if len(lines) == 1 and pdfmetrics.stringWidth(lines[0], "MT-B", 24) > avail:
+        lines = simpleSplit(lines[0], "MT-B", 24, avail)[:2]      # nem fér ki: tördelés
+    single = len(lines) == 1
+    base_fs = 32 if single else 24
+    c.setFillColor(black)
+    if lines:
+        fs = _fit(lines[0], "MT-B", base_fs, avail, 24 if single else 5)
+        half = 0.33 * fs                    # a nyíl fél magassága a betűmérethez igazodik
+        ax = M + BAR_W + 18
+        p = c.beginPath()
+        p.moveTo(ax, cy - half); p.lineTo(ax, cy + half); p.lineTo(ax + half * 1.4, cy)
+        p.close()
+        c.drawPath(p, fill=1, stroke=0)
+        if single:
+            c.setFont("MT-B", fs)
+            c.drawString(tx, cy - 0.36 * fs, lines[0])           # 0.36·fs ≈ a nagybetűk fél magassága
+        else:
+            for i, line in enumerate(lines):
+                f2 = _fit(line, "MT-B", 24, avail)
+                c.setFont("MT-B", f2)
+                c.drawString(tx, top - 28 - i * 26, line)
 
     # ---------- bal oldali vonalsáv ----------
     stops = d["stops"]

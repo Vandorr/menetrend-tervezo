@@ -30,6 +30,8 @@ def main(outdir):
     x["door"]["enabled"] = False; x["info"]["enabled"] = False; x["footnotes"] = [["a", "x", "y"]] * 4
     x["sections"][0][0]["rows"] = {str(h): "05, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 58, 59, 59, 59" for h in model.HOURS}
     cases["szelso"] = x
+    x = sample(); x["destination"] = ["Közvágóhíd H", ""]; cases["egysoros"] = x
+    x = sample(); x["destination"] = ["Budapest Nyugati pályaudvar / Vörösmarty tér, Nagykörút", ""]; cases["hosszu_egysoros"] = x
     x = model.new_line(); cases["ures"] = x
     for name, data in cases.items():
         out = os.path.join(outdir, name + ".pdf")
