@@ -33,6 +33,23 @@ def main(outdir):
     x = sample(); x["destination"] = ["Közvágóhíd H", ""]; cases["egysoros"] = x
     x = sample(); x["destination"] = ["Budapest Nyugati pályaudvar / Vörösmarty tér, Nagykörút", ""]; cases["hosszu_egysoros"] = x
     x = model.new_line(); cases["ures"] = x
+    x = model.new_line()
+    x.update(number="6É", type="ejszakai", color="#000000", destination=["Széll Kálmán tér M", ""])
+    x["stops"] = [["Móricz Zsigmond körtér M", 0, ""], ["Budafoki út / Karinthy Frigyes út", 0, ""]] + \
+        [["Megálló %d" % i, i * 2, "a" if i == 5 else ""] for i in range(1, 15)]
+    b = x["sections"][0][0]
+    b["title"], b["sub"] = "Éjszakai karbantartások idején", "During night-time maintenance works"
+    b["rows"] = {"0": "22, 27, 32, 37, 45, 52", "1": "00, 07, 15, 22, 30, 37, 45", "2": "00, 15, 30, 45",
+                 "3": "00, 15, 30, 45", "4": "00, 09a, 19a"}
+    x["footnotes"] = [["a", "Blaha Lujza tér M megállóig közlekedik", "runs only to Blaha Lujza tér M stop", "info"],
+                      ["", "A pótlóbusz nem áll meg.", "The replacement bus does not stop.", "stop"],
+                      ["", "Karbantartási tájékoztató a megállókban.", "Info boards in the stops.", "work"],
+                      ["", "Minden jármű akadálymentes.", "All vehicles are accessible.", "access"]]
+    cases["ejszakai"] = x
+    x = sample(); x["color"] = "#000000"
+    for sec in x["sections"]:
+        for b in sec: b["rows"]["0"] = "10, 40"; b["rows"]["24"] = "00"
+    cases["fekete_0_24"] = x
     for name, data in cases.items():
         out = os.path.join(outdir, name + ".pdf")
         pdfgen.render(data, out)

@@ -55,6 +55,39 @@ def _fit(text, font, size, maxw, minsize=5.0):
     return size
 
 
+def _note_icon(c, kind, x, y, sz):
+    """Lábjegyzet-ikon, (x, y) a bal alsó sarok."""
+    if kind == "info":
+        c.drawImage(_img("info.png"), x, y, sz, sz, mask="auto")
+    elif kind == "access":
+        c.drawImage(_img("access.png"), x, y, sz, sz, mask="auto")
+    elif kind == "stop":
+        cx, cy, r = x + sz / 2, y + sz / 2, sz / 2
+        red = HexColor("#E2231A")
+        c.setFillColor(HexColor("#FFC20E"))
+        c.setStrokeColor(red)
+        c.setLineWidth(2.2)
+        c.circle(cx, cy, r - 1.1, fill=1, stroke=1)
+        c.setLineWidth(3)
+        d = r * 0.42
+        c.line(cx - d, cy - d, cx + d, cy + d)
+        c.line(cx - d, cy + d, cx + d, cy - d)
+    elif kind == "work":
+        cx, cy, r = x + sz / 2, y + sz / 2, sz / 2
+        c.setFillColor(HexColor("#FFD800"))
+        c.circle(cx, cy, r, fill=1, stroke=0)
+        c.setFillColor(black)
+        c.setStrokeColor(black)
+        c.circle(cx - r * 0.1, cy + r * 0.42, r * 0.17, fill=1, stroke=0)      # fej
+        c.setLineWidth(2.4)
+        c.line(cx - r * 0.1, cy + r * 0.25, cx - r * 0.25, cy - r * 0.3)       # test
+        c.line(cx - r * 0.25, cy - r * 0.3, cx - r * 0.5, cy - r * 0.62)       # láb
+        c.line(cx - r * 0.25, cy - r * 0.3, cx, cy - r * 0.62)
+        c.setLineWidth(1.8)
+        c.line(cx - r * 0.12, cy + r * 0.1, cx + r * 0.38, cy - r * 0.3)       # kar + ásó
+        c.line(cx + r * 0.3, cy - r * 0.2, cx + r * 0.55, cy - r * 0.5)
+
+
 def render(data, out_path):
     _fonts()
     d = model.normalize(data)
@@ -70,7 +103,7 @@ def render(data, out_path):
     dia = 52
     c.setFillColor(col)
     c.circle(M + dia / 2 + 2, top - hh / 2, dia / 2, fill=1, stroke=0)
-    icon = "%s_%s.png" % (d["type"], "k" if dark_ink else "w")
+    icon = "%s_%s.png" % (model.TYPE_ICON.get(d["type"], "busz"), "k" if dark_ink else "w")
     c.drawImage(_img(icon), M + 2, top - hh / 2 - dia / 2, dia, dia, mask="auto")
     c.setFillColor(col)
     c.roundRect(M + 64, top - hh + 6, 84, hh - 12, 7, fill=1, stroke=0)
@@ -119,9 +152,17 @@ def render(data, out_path):
         c.line(lx, y_first, lx, y_first - (n - 1) * step)
     c.setFillColor(NAVY)
     c.rect(M, y_first - 11, BAR_W - 4, 22, fill=1, stroke=0)
-    name_w = M + BAR_W - 6 - (lx + 14)
-    for i, (name, mins) in enumerate(stops):
+    name_w_full = M + BAR_W - 6 - (lx + 14)
+    name_w = name_w_full
+    for i, (name, mins, mark) in enumerate(stops):
         y = y_first - i * step
+        mark = str(mark).strip()[:2]
+        if mark and i > 0:
+            c.setFillColor(HexColor("#0A5FA8"))
+            c.circle(M + BAR_W - 16, y, 5.2, fill=1, stroke=0)
+            c.setFillColor(white)
+            c.setFont("MT-B", 7.5)
+            c.drawCentredString(M + BAR_W - 16, y - 2.6, mark)
         c.setFillColor(white)
         c.setStrokeColor(col)
         c.setLineWidth(2.2)
@@ -133,6 +174,7 @@ def render(data, out_path):
             c.setFont(font, _fit(name, font, 8.8, name_w))
             c.drawString(lx + 14, y - 3, name)
             continue
+        name_w = name_w_full - (16 if mark else 0)
         c.setFillColor(black)
         c.setFont("MT-B" if bold else "MT-R", 7.8)
         c.drawRightString(lx - 9, y - 2.7, "%s'" % mins)
@@ -143,12 +185,42 @@ def render(data, out_path):
         for k, ln in enumerate(lines):
             c.drawString(lx + 14, y_text - k * 9, ln)
 
-    # ---------- menetrendi blokkok ----------
+    # ---------- jelmagyarázat: helyfoglalás (alulról felfelé) ----------
     x0 = M + BAR_W + GAP
     xw = W - M - x0
+    lx0 = x0 + 8
+    notes = [f for f in d["footnotes"] if (f[0] or f[1] or f[2])][:model.MAX_FOOTNOTES]
+    NOTE_H = 29
+    iy = 84
+    access_y = bike_y = None
+    if d["legend"].get("access"):
+        access_y = iy
+        iy += 32
+    if d["legend"].get("bike"):
+        bike_y = iy
+        iy += 32
+    top_fn = iy + (len(notes) - 1) * NOTE_H
+    legend_top = (top_fn + 18) if notes else (iy - 32 + 18 if iy > 84 else 78)
+
+    # ---------- menetrendi blokkok ----------
+    listmode = d["type"] == "ejszakai"
+
+    def hours_of(sec):
+        if listmode:                              # csak a kitöltött órák, lista-szerűen
+            return [h for h in model.HOURS
+                    if any(b["rows"].get(str(h), "").strip() for b in sec)] or [0]
+        extra = [h for h in model.HOURS if h not in model.DEFAULT_HOURS
+                 and any(b["rows"].get(str(h), "").strip() for b in sec)]
+        return sorted(set(model.DEFAULT_HOURS) | set(extra))
+
+    secs = [(sec, hours_of(sec)) for sec in d["sections"]]
     y = top - hh - 12
-    row_h = 10.6 if len(d["sections"]) > 1 else 12.2
-    for sec in d["sections"]:
+    base_rh = 10.6 if len(secs) > 1 else 12.2
+    total_rows = sum(len(hs) for _, hs in secs)
+    overhead = 22 + 10 * len(secs)
+    row_h = max(5.6, min(base_rh, (y - legend_top - overhead) / max(1, total_rows)))
+    fsz = min(7.6, row_h * 0.72 + 0.4) if not listmode else min(8.4, row_h * 0.7)
+    for sec, hours in secs:
         k = len(sec)
         bw = (xw - (k - 1) * 6) / k
         for j, b in enumerate(sec):
@@ -162,27 +234,29 @@ def render(data, out_path):
             c.setLineWidth(2)
             c.line(bx, y - 21, bx + bw, y - 21)
         ry = y - 22
-        for h in model.HOURS:
+        for idx, h in enumerate(hours):
             for j, b in enumerate(sec):
                 bx = x0 + j * (bw + 6)
-                if h % 2 == 1:
+                shaded = (idx % 2 == 0) if listmode else (h % 2 == 1)
+                if shaded:
                     c.setFillColor(_tint(b["accent"], 0.28))
                     c.rect(bx, ry - row_h, bw, row_h, fill=1, stroke=0)
+                    if listmode:
+                        c.setFillColor(_tint(b["accent"], 0.5))
+                        c.rect(bx, ry - row_h, 16, row_h, fill=1, stroke=0)
                 txt = b["rows"].get(str(h), "").strip()
                 c.setFillColor(black)
-                c.setFont("MT-B", 7.6)
-                c.drawString(bx + 1.5, ry - row_h + (row_h - 7.6) / 2 + 1.2, "%02d:" % h)
+                c.setFont("MT-B", fsz)
+                base_y = ry - row_h + (row_h - fsz) / 2 + 1.2
+                c.drawString(bx + 1.5, base_y, "%02d:" % h)
                 if txt:
-                    font = "MT-I" if "perc" in txt else "MT-R"
-                    c.setFont(font, _fit(txt, font, 7.6, bw - 19))
-                    c.drawString(bx + 17, ry - row_h + (row_h - 7.6) / 2 + 1.2, txt)
+                    font = "MT-B" if listmode else ("MT-I" if "perc" in txt else "MT-R")
+                    c.setFont(font, _fit(txt, font, fsz, bw - 19))
+                    c.drawString(bx + 17, base_y, txt)
             ry -= row_h
         y = ry - 10
 
-    # ---------- jelmagyarázat (alulról felfelé) ----------
-    lx0 = x0 + 8
-    iy = 84
-
+    # ---------- jelmagyarázat ----------
     def legend_row(icon_name, hu, en, yy):
         c.drawImage(_img(icon_name), lx0, yy - 8, 24, 24, mask="auto")
         c.setFillColor(black)
@@ -191,27 +265,26 @@ def render(data, out_path):
         c.setFont("MT-I", 7.5)
         c.drawString(lx0 + 32, yy - 1, en)
 
-    if d["legend"].get("access"):
+    if access_y is not None:
         legend_row("access.png",
                    "Akadálymentes jármű is közlekedik, és a megjelölt megállók akadálymentesek.",
-                   "Some vehicles and the indicated stops are accessible.", iy)
-        iy += 32
-    if d["legend"].get("bike"):
+                   "Some vehicles and the indicated stops are accessible.", access_y)
+    if bike_y is not None:
         legend_row("bike.png",
                    "A piktogrammal megjelölt járműveken egy darab kerékpár szállítható.",
-                   "Vehicles marked with this pictogram can take one bike on board.", iy)
-        iy += 32
-    notes = [f for f in d["footnotes"] if (f[0] or f[1])][:model.MAX_FOOTNOTES]
-    if notes:
-        top_fn = iy + (len(notes) - 1) * 28
-        c.drawImage(_img("info.png"), lx0, top_fn - 8, 24, 24, mask="auto")
-        for k, (key, hu, en) in enumerate(notes):
-            yb = top_fn + 8 - k * 28
-            c.setFillColor(black)
-            c.setFont("MT-B", 8)
-            c.drawString(lx0 + 32, yb, "%s: %s" % (key, hu))
-            c.setFont("MT-I", 7.5)
-            c.drawString(lx0 + 44, yb - 9, en)
+                   "Vehicles marked with this pictogram can take one bike on board.", bike_y)
+    prev_icon = None
+    for k, (key, hu, en, icon) in enumerate(notes):
+        yb = top_fn + 8 - k * NOTE_H
+        if icon != "none" and not (icon == "info" and prev_icon == "info"):
+            _note_icon(c, icon, lx0, yb - 16, 24)
+        prev_icon = icon
+        c.setFillColor(black)
+        head = ("%s: %s" % (key, hu)) if key else hu
+        c.setFont("MT-B", _fit(head, "MT-B", 8, W - M - (lx0 + 32)))
+        c.drawString(lx0 + 32, yb, head)
+        c.setFont("MT-I", _fit(en, "MT-I", 7.5, W - M - (lx0 + 44)))
+        c.drawString(lx0 + 44 if key else lx0 + 32, yb - 9, en)
 
     # ---------- első ajtós sáv ----------
     bx, bw, by, bh = x0, W - M - x0, 46, 24

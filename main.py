@@ -283,7 +283,7 @@ class EditScreen(Screen):
         for t in model.TYPES:
             b = Tog(text=model.TYPE_HU[t], group="vtype", allow_no_selection=False,
                     state="down" if d["type"] == t else "normal")
-            b.bind(on_release=lambda w, t=t: self._set("type", t, True))
+            b.bind(on_release=lambda w, t=t: self._set_type(t))
             row.add_widget(b)
         g.add_widget(row)
         g.add_widget(cap("Járatszám (pl. 7, 1A, 900A)"))
@@ -317,6 +317,15 @@ class EditScreen(Screen):
         g.add_widget(end_lb)
         return scroll(g)
 
+    def _set_type(self, t):
+        d = self.data
+        was_night = d["type"] == "ejszakai"
+        d["type"] = t
+        if t == "ejszakai" and not was_night:
+            d["color"] = "#000000"                 # az éjszakai járat jele fekete
+            self.refresh("basic")
+        self.update_title()
+
     def _pick_color(self, hexv):
         self.data["color"] = hexv
         self.refresh("basic")
@@ -329,16 +338,19 @@ class EditScreen(Screen):
     def build_stops(self):
         d = self.data
         g = vlist()
-        g.add_widget(note("Megálló neve és a menetidő az első megállótól (perc). "
+        g.add_widget(note("Megálló neve, a menetidő az első megállótól (perc) és egy elhagyható kék jel (pl. a), "
+                          "amihez a Jelzések fülön lábjegyzetet írhatsz. "
                           "A hosszú nevek a lapon automatikusan sortörést kapnak. Legfeljebb %d megálló."
                           % model.MAX_STOPS))
-        for i, (name, mins) in enumerate(d["stops"]):
+        for i, (name, mins, mark) in enumerate(d["stops"]):
             r = hrow()
             r.add_widget(lbl(str(i + 1), size_hint_x=None, width=dp(36), halign="center", color=MUTED))
             r.add_widget(field(name, lambda v, i=i: d["stops"][i].__setitem__(0, v)))
             r.add_widget(field("0" if i == 0 else str(mins),
                                lambda v, i=i: d["stops"][i].__setitem__(1, to_int(v)),
                                width=dp(80), hint="perc", numeric=True, disabled=(i == 0)))
+            r.add_widget(field(mark, lambda v, i=i: d["stops"][i].__setitem__(2, v.strip()[:2]),
+                               width=dp(64), hint="jel", disabled=(i == 0)))
             r.add_widget(button("Fel", lambda i=i: self._stop_move(i, -1), width=dp(64)))
             r.add_widget(button("Le", lambda i=i: self._stop_move(i, 1), width=dp(64)))
             r.add_widget(button("Töröl", lambda i=i: self._stop_del(i), width=dp(90), kind="danger"))
@@ -363,7 +375,7 @@ class EditScreen(Screen):
         s = self.data["stops"]
         if len(s) >= model.MAX_STOPS:
             return
-        s.append(["Új megálló", (s[-1][1] + 2) if s else 0])
+        s.append(["Új megálló", (s[-1][1] + 2) if s else 0, ""])
         self.refresh("stops")
 
     # ---- 3. fül: Menetrend
@@ -429,7 +441,7 @@ class EditScreen(Screen):
 
         # gyors kitöltés
         g.add_widget(cap("Gyors kitöltés: óra-tól, óra-ig, első perc, gyakoriság (perc)"))
-        vals = ["5", "22", "0", "10"]
+        vals = ["0", "4", "0", "15"] if d["type"] == "ejszakai" else ["5", "22", "0", "10"]
         fields = []
         row = hrow()
         for k, v in enumerate(vals):
@@ -536,15 +548,25 @@ class EditScreen(Screen):
                           ("tagline", "Alsó sor")):
             g.add_widget(field(d["info"][key], lambda v, key=key: d["info"].__setitem__(key, v), hint=hint))
 
-        g.add_widget(cap("Lábjegyzetek (az időpontok után írt betűjelekhez, pl. 46a)"))
+        g.add_widget(cap("Lábjegyzetek (betűjel az időpontok / megállók után; a jel üresen is hagyható, ikonnal)"))
+        icon_names = dict(model.FOOTNOTE_ICONS)
         for i, fn in enumerate(d["footnotes"]):
-            while len(fn) < 3:
-                fn.append("")
+            while len(fn) < 4:
+                fn.append("info")
             g.add_widget(hrow(
                 field(fn[0], lambda v, fn=fn: fn.__setitem__(0, v), width=dp(70), hint="jel"),
                 field(fn[1], lambda v, fn=fn: fn.__setitem__(1, v), hint="Magyarul"),
-                field(fn[2], lambda v, fn=fn: fn.__setitem__(2, v), hint="Angolul"),
-                button("Töröl", lambda i=i: self._fn_del(i), width=dp(90), kind="danger")))
+                field(fn[2], lambda v, fn=fn: fn.__setitem__(2, v), hint="Angolul")))
+            sp = Drop(text=icon_names.get(fn[3], "Info"), values=[n for _, n in model.FOOTNOTE_ICONS],
+                      size_hint_x=None, width=dp(200), size_hint_y=None, height=ROW_H)
+
+            def set_icon(inst, text, fn=fn):
+                for k, n in model.FOOTNOTE_ICONS:
+                    if n == text:
+                        fn[3] = k
+            sp.bind(text=set_icon)
+            g.add_widget(hrow(lbl("Ikon:", size_hint_x=None, width=dp(60), color=MUTED), sp,
+                              button("Töröl", lambda i=i: self._fn_del(i), width=dp(90), kind="danger")))
         if len(d["footnotes"]) < model.MAX_FOOTNOTES:
             g.add_widget(button("+ Lábjegyzet", self._fn_add, kind="primary"))
         return scroll(g)
@@ -554,7 +576,7 @@ class EditScreen(Screen):
             return
         used = {f[0] for f in self.data["footnotes"]}
         key = next((c for c in "abcdef" if c not in used), "x")
-        self.data["footnotes"].append([key, "", ""])
+        self.data["footnotes"].append([key, "", "", "info"])
         self.refresh("marks")
 
     def _fn_del(self, i):

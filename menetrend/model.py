@@ -6,10 +6,17 @@ import json
 import os
 import uuid
 
-TYPES = ["villamos", "busz", "trolibusz"]
-TYPE_HU = {"villamos": "Villamos", "busz": "Busz", "trolibusz": "Trolibusz"}
+TYPES = ["villamos", "busz", "trolibusz", "ejszakai"]
+TYPE_HU = {"villamos": "Villamos", "busz": "Busz", "trolibusz": "Trolibusz",
+           "ejszakai": "Éjszakai"}
+# az éjszakai járat busz-piktogramot kap, és a menetrendje lista-szerű
+TYPE_ICON = {"villamos": "villamos", "busz": "busz", "trolibusz": "trolibusz", "ejszakai": "busz"}
 
-COLORS = [("Sárga", "#FFD800"), ("Kék", "#009FE3"), ("Piros", "#E41F18"),
+# lábjegyzet-ikonok (kulcs, megnevezés)
+FOOTNOTE_ICONS = [("info", "Info"), ("stop", "Nem áll meg"), ("work", "Munkavégzés"),
+                  ("access", "Akadálymentes"), ("none", "Nincs ikon")]
+
+COLORS = [("Fekete", "#000000"), ("Sárga", "#FFD800"), ("Kék", "#009FE3"), ("Piros", "#E41F18"),
           ("Zöld", "#4CA82F"), ("Narancs", "#F28C00"), ("Lila", "#7A3E9D"),
           ("Sötétkék", "#1B1F5E"), ("Szürke", "#707070")]
 
@@ -27,7 +34,8 @@ BLOCK_PRESETS = [
 ]
 ACCENTS = ["#999999", "#3B9AD9", "#7DBA3A", "#E0545B", "#F2B400", "#9B59B6"]
 
-HOURS = list(range(4, 24))
+HOURS = list(range(0, 25))                # 0–24 óra is kitölthető
+DEFAULT_HOURS = list(range(4, 24))          # ennyi sor jelenik meg, ha nincs kitöltve más
 MAX_SECTIONS = 2
 MAX_COLS = 3
 MAX_STOPS = 30
@@ -76,6 +84,11 @@ def normalize(d):
             b["rows"] = {str(k): str(v) for k, v in b["rows"].items()}
     if not out["stops"]:
         out["stops"] = base["stops"]
+    out["stops"] = [(list(x) + ["", 0, ""][len(x):])[:3] if len(x) < 3 else list(x)[:3]
+                    for x in out["stops"]]
+    out["footnotes"] = [(list(f) + ["", "", "", "info"][len(f):])[:4] for f in out["footnotes"]]
+    if d.get("type") not in TYPES:
+        out["type"] = "busz"
     return out
 
 
