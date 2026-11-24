@@ -10,7 +10,7 @@ A lefordított Android-alkalmazás (`menetrend-tervezo.apk`) a tár **[Releases]
 Telepítés Android-tabletre:
 1. Nyisd meg a Releases oldalt a tabletről, és töltsd le a `menetrend-tervezo.apk` fájlt.
 2. Nyisd meg a letöltött fájlt, és engedélyezd az ismeretlen forrásból telepítést, ha az Android rákérdez.
-3. Ez egy debug APK, ezért a Play Protect figyelmeztetést mutathat – a telepítés ettől még folytatható.
+3. Az APK nem a Play Áruházból származik, ezért a Play Protect figyelmeztetést mutathat – a telepítés ettől még folytatható.
 
 Minden módosítás után a GitHub automatikusan új kiadást készít, a legnagyobb sorszámú a legfrissebb.
 
@@ -51,4 +51,12 @@ Helyi építés (Linux/WSL): `pip install buildozer` majd `buildozer android deb
 
 ## Megjegyzések
 - Betűtípus: Liberation Sans Narrow (SIL OFL), a `assets/fonts` mappában.
-- A járatjel-piktogramok az eredeti BKK-s mintalapokról lettek kivágva, saját célra.
+
+## Jogi nyilatkozat / felhasználási feltételek
+- **Nem hivatalos, független hobbiprojekt.** A program és az általa készített lapok nincsenek kapcsolatban a Budapesti Közlekedési Központtal (BKK), a BKV Zrt.-vel vagy bármely közlekedési szolgáltatóval, nem tőlük származnak, és nincs a jóváhagyásukkal. A BKK, a BKV, a „Budapest" és más említett nevek, jelek, logók a jogtulajdonosaik védjegyei vagy tulajdonai; ezeket a program nem tartalmazza és nem használja.
+- **Grafikák.** A tárban lévő piktogramok és a menetrendlapok kialakítása közlekedési tájékoztató anyagok mintájára, ahhoz hasonlóan készült, egyes elemek (pl. járatjelek, jelmagyarázat-ikonok) az eredeti tájékoztató lapokról származnak. Ezekre a jogok az eredeti jogtulajdonosokat illetik; **a tulajdonjog nem száll át, és semmilyen felhasználási jogot nem adok rájuk.** A grafikák kizárólag **saját, személyes, nem üzleti célú** felhasználásra (tanulás, hobbi, makettezés, játék, házi nyomtatás) szolgálnak. **Tilos** őket kereskedelmi célra használni, értékesíteni, nyilvánosan terjeszteni vagy közzétenni, illetve olyan módon felhasználni, amely a jogtulajdonosok nevében vagy hivatalos anyagként tüntetné fel az eredményt.
+- **Kitalált adatok.** A programmal készített menetrendek kitalált, szemléltető jellegűek. Ne tedd ki őket valódi megállóba, járműre vagy más nyilvános helyre, és ne add elő valódi menetrendként, mert ez megtévesztő lehet. Az útvonalak, megállók és időpontok nem valós közlekedési adatok.
+- **Felelősség.** A szoftver „ahogy van" alapon, minden garancia nélkül áll rendelkezésre. A használatából eredő károkért a szerző nem vállal felelősséget. A használó maga felel azért, hogy az elkészített anyagokat jogszerűen használja.
+- **Eltávolítás.** Ha jogtulajdonos úgy látja, hogy valamely elem a jogait sérti, jelezze a tár Issues oldalán, és az érintett elemet haladéktalanul eltávolítom.
+- **Harmadik fél komponensei:** Liberation Sans Narrow betűtípus (SIL Open Font License 1.1), reportlab (BSD), Kivy (MIT), Pillow (HPND). Ezek a saját licencük szerint használhatók.
+- Ez a szöveg általános tájékoztatás, nem jogi tanács.
