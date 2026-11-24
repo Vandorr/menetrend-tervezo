@@ -22,9 +22,9 @@ A program által készített PDF-ek (valódi kimenet, kitalált adatokkal). Katt
 |:--:|:--:|
 | ![7-es villamos](docs/minta-7-villamos.png) | ![2-es villamos](docs/minta-2-villamos.png) |
 
-| [6É éjszakai járat – fekete jel, lista-szerű menetrend](docs/minta-6e-ejszakai.pdf) |
+| [9É éjszakai járat (kitalált) – fekete jel, lista-szerű menetrend](docs/minta-9e-ejszakai.pdf) |
 |:--:|
-| ![6É éjszakai](docs/minta-6e-ejszakai.png) |
+| ![9É éjszakai](docs/minta-9e-ejszakai.png) |
 
 ## Használat
 1. **Járat** fül: jármű típusa (villamos / busz / trolibusz / éjszakai), járatszín (fekete is), járatszám, szín, irány, érvényesség kezdete és hossza (alapból 1 év).
