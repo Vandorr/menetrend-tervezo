@@ -61,31 +61,6 @@ def _note_icon(c, kind, x, y, sz):
         c.drawImage(_img("info.png"), x, y, sz, sz, mask="auto")
     elif kind == "access":
         c.drawImage(_img("access.png"), x, y, sz, sz, mask="auto")
-    elif kind == "stop":
-        cx, cy, r = x + sz / 2, y + sz / 2, sz / 2
-        red = HexColor("#E2231A")
-        c.setFillColor(HexColor("#FFC20E"))
-        c.setStrokeColor(red)
-        c.setLineWidth(2.2)
-        c.circle(cx, cy, r - 1.1, fill=1, stroke=1)
-        c.setLineWidth(3)
-        d = r * 0.42
-        c.line(cx - d, cy - d, cx + d, cy + d)
-        c.line(cx - d, cy + d, cx + d, cy - d)
-    elif kind == "work":
-        cx, cy, r = x + sz / 2, y + sz / 2, sz / 2
-        c.setFillColor(HexColor("#FFD800"))
-        c.circle(cx, cy, r, fill=1, stroke=0)
-        c.setFillColor(black)
-        c.setStrokeColor(black)
-        c.circle(cx - r * 0.1, cy + r * 0.42, r * 0.17, fill=1, stroke=0)      # fej
-        c.setLineWidth(2.4)
-        c.line(cx - r * 0.1, cy + r * 0.25, cx - r * 0.25, cy - r * 0.3)       # test
-        c.line(cx - r * 0.25, cy - r * 0.3, cx - r * 0.5, cy - r * 0.62)       # láb
-        c.line(cx - r * 0.25, cy - r * 0.3, cx, cy - r * 0.62)
-        c.setLineWidth(1.8)
-        c.line(cx - r * 0.12, cy + r * 0.1, cx + r * 0.38, cy - r * 0.3)       # kar + ásó
-        c.line(cx + r * 0.3, cy - r * 0.2, cx + r * 0.55, cy - r * 0.5)
 
 
 def render(data, out_path):

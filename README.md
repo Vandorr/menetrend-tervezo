@@ -22,7 +22,7 @@ A program által készített PDF-ek (valódi kimenet, kitalált adatokkal). Katt
 |:--:|:--:|
 | ![7-es villamos](docs/minta-7-villamos.png) | ![2-es villamos](docs/minta-2-villamos.png) |
 
-| [6É éjszakai járat – fekete jel, lista-szerű menetrend, lábjegyzet-ikonok](docs/minta-6e-ejszakai.pdf) |
+| [6É éjszakai járat – fekete jel, lista-szerű menetrend](docs/minta-6e-ejszakai.pdf) |
 |:--:|
 | ![6É éjszakai](docs/minta-6e-ejszakai.png) |
 
@@ -31,7 +31,7 @@ A program által készített PDF-ek (valódi kimenet, kitalált adatokkal). Katt
 2. **Megállók** fül: megállók neve, menetideje az első megállótól, és elhagyható kék jel (pl. „a”) a megálló mellett.
 3. **Menetrend** fül: 0–24 óráig kitölthető (a lapon a 4–23 sor mindig látszik, a 0–3 és 24 csak ha kitöltöd; éjszakai járatnál csak a kitöltött órák, lista-szerűen); legfeljebb 2 sor × 3 oszlop blokk (pl. hétköznap / péntek / szombat…); óránként a percek.
    „Gyors kitöltés” és „másolás másik blokkból” segít.
-4. **Jelzések** fül: kerékpár és akadálymentes piktogram, első ajtós felszállás sáv (be/ki), infóblokk (be/ki), lábjegyzetek (ikonnal: info, nem áll meg, munkavégzés, akadálymentes).
+4. **Jelzések** fül: kerékpár és akadálymentes piktogram, első ajtós felszállás sáv (be/ki), infóblokk (be/ki), lábjegyzetek (ikonnal: info vagy akadálymentes, vagy ikon nélkül).
 5. **Előnézet** fül: az aktuális adatokból friss PDF-et rajzol és képként mutatja (nagyítható, görgethető; Androidon a beépített PdfRenderer-rel).
 6. **PDF** fül: generálás → Android: Letöltések mappa; innen megnyitható és nyomtatható.
 

@@ -42,8 +42,6 @@ def main(outdir):
     b["rows"] = {"0": "22, 27, 32, 37, 45, 52", "1": "00, 07, 15, 22, 30, 37, 45", "2": "00, 15, 30, 45",
                  "3": "00, 15, 30, 45", "4": "00, 09a, 19a"}
     x["footnotes"] = [["a", "Blaha Lujza tér M megállóig közlekedik", "runs only to Blaha Lujza tér M stop", "info"],
-                      ["", "A pótlóbusz nem áll meg.", "The replacement bus does not stop.", "stop"],
-                      ["", "Karbantartási tájékoztató a megállókban.", "Info boards in the stops.", "work"],
                       ["", "Minden jármű akadálymentes.", "All vehicles are accessible.", "access"]]
     cases["ejszakai"] = x
     x = sample(); x["color"] = "#000000"

@@ -13,8 +13,7 @@ TYPE_HU = {"villamos": "Villamos", "busz": "Busz", "trolibusz": "Trolibusz",
 TYPE_ICON = {"villamos": "villamos", "busz": "busz", "trolibusz": "trolibusz", "ejszakai": "busz"}
 
 # lábjegyzet-ikonok (kulcs, megnevezés)
-FOOTNOTE_ICONS = [("info", "Info"), ("stop", "Nem áll meg"), ("work", "Munkavégzés"),
-                  ("access", "Akadálymentes"), ("none", "Nincs ikon")]
+FOOTNOTE_ICONS = [("info", "Info"), ("access", "Akadálymentes"), ("none", "Nincs ikon")]
 
 COLORS = [("Fekete", "#000000"), ("Sárga", "#FFD800"), ("Kék", "#009FE3"), ("Piros", "#E41F18"),
           ("Zöld", "#4CA82F"), ("Narancs", "#F28C00"), ("Lila", "#7A3E9D"),
@@ -87,6 +86,9 @@ def normalize(d):
     out["stops"] = [(list(x) + ["", 0, ""][len(x):])[:3] if len(x) < 3 else list(x)[:3]
                     for x in out["stops"]]
     out["footnotes"] = [(list(f) + ["", "", "", "info"][len(f):])[:4] for f in out["footnotes"]]
+    for f in out["footnotes"]:
+        if f[3] not in dict(FOOTNOTE_ICONS):
+            f[3] = "info"
     if d.get("type") not in TYPES:
         out["type"] = "busz"
     return out
